@@ -78,6 +78,7 @@
         let fieldMap = options.fieldMap;
         if (!fieldMap) {
             console.warn('Address splitting could not read the field map and will be disabled');
+            return;
         }
 
         $container = $('#wcft_modal_wrap .wcft_modal_form > div');
