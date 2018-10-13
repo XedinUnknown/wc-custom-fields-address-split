@@ -41,7 +41,7 @@ class Plugin {
             $product = wc_get_product( get_post()->ID );
             $product_id = $product->get_id();
 
-            $is_enabled = get_post_meta( $product_id, '_enable_wcftxtas', true ) === 'yes';
+            $is_enabled = get_post_meta( $product_id, '_wcftxtas_enabled', true ) === 'yes';
             if (!$is_enabled) {
                 return false;
             }
