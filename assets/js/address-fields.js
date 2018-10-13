@@ -74,6 +74,49 @@
         };
     };
 
+    /**
+     * @param {AddressSplitter} splitter
+     * @param {CustomFieldSelector} selector
+     * @constructor
+     */
+    var FieldSplitterUi = function (splitter, selector) {
+        this.splitter = splitter;
+        this.selector = selector;
+
+        this.splitField = function (el, fieldMap) {
+            let content = $(el).val();
+            let data = this.splitter.splitAddress(content);
+
+            for (let i in fieldMap) {
+                let $el = this.selector.selectField(fieldMap[i]);
+                $el.val(data[i]);
+            }
+        };
+    };
+
+    var AddressFieldUi = function (fieldSplitterUi, container) {
+        this.fieldSplitterUi = fieldSplitterUi;
+        this.container = container;
+
+        this.createField = function (id, label, fieldMap) {
+            $container = $(this.container);
+            $senderField = $(`<textarea class="wcftxtas-address-field wcftxtas-address-field--${id}" id="wcftxtas-address-field-${id}"></textarea>`);
+            $wrapper = $('<p><label></label></p>');
+            $senderField.wrap($wrapper);
+            $senderField.before(label);
+            $senderBlock = $senderField.closest('p');
+
+            let me = this;
+            $senderField.on('blur', function (e) {
+                me.fieldSplitterUi.splitField(e.target, fieldMap);
+            });
+
+            $container.prepend($senderBlock);
+
+            return $senderField;
+        };
+    };
+
     $(function () {
         let fieldMap = options.fieldMap;
         if (!fieldMap) {
@@ -83,29 +126,19 @@
 
         $container = $('#wcft_modal_wrap .wcft_modal_form > div');
 
-        $senderField = $('<textarea class="wcftxtas-sender-address"></textarea>');
-        $wrapper = $('<p><label></label></p>');
-        $senderField.wrap($wrapper);
-        $senderField.before('Sender Address');
-        $senderBlock = $senderField.closest('p');
-
-        $container.prepend($senderBlock);
 
         let splitter = new AddressSplitter();
         let selector = new CustomFieldSelector($container, 'wcft_field');
+        let splitterUi = new FieldSplitterUi(splitter, selector);
+        let fieldUi = new AddressFieldUi(splitterUi, $container.get(0));
 
-        $senderField.on('blur', function (e) {
-            let $el = $(e.target);
-            let content = $el.val();
-
-            let data = splitter.splitAddress(content);
-            console.log(data);
-
-            for (let i in fieldMap) {
-                let $el = selector.selectField(fieldMap[i]);
-                $el.val(data[i]);
+        for (i in fieldMap) {
+            if (!(fieldMap[i] && typeof fieldMap[i] === 'object')) {
+                console.warn(`Address splitting disabled for field "${i}" because it could not be read`);
+                continue;
             }
-        });
 
+            fieldUi.createField(i, fieldMap[i].label, fieldMap[i].mapping);
+        }
     });
 }(jQuery, wcftxtasOptions));
