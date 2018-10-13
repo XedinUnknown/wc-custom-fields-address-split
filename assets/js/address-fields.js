@@ -132,7 +132,7 @@
         let splitterUi = new FieldSplitterUi(splitter, selector);
         let fieldUi = new AddressFieldUi(splitterUi, $container.get(0));
 
-        for (i in fieldMap) {
+        for (i in fieldMap.reverse()) { // Reverse because we are appending one by one
             if (!(fieldMap[i] && typeof fieldMap[i] === 'object')) {
                 console.warn(`Address splitting disabled for field "${i}" because it could not be read`);
                 continue;
