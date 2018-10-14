@@ -40,6 +40,9 @@ class Plugin {
         add_action( 'init', function () {
             $this->register_assets();
         } );
+        add_action( 'admin_init', function () {
+            $this->register_assets();
+        } );
         add_action( 'wp_enqueue_scripts', function () {
             if (!function_exists('is_product') || !is_product()) {
                 return false;
@@ -63,10 +66,25 @@ class Plugin {
                 'fieldMap'            => $this->get_field_map( $product_id ),
             ) );
         } );
+
+        add_action( 'admin_enqueue_scripts', function () {
+            $post = get_post();
+            if (!$post || is_wp_error($post) || $post->post_type !== 'product') {
+                return false;
+            }
+
+            wp_enqueue_style( 'wcftxtas-admin-css' );
+            wp_enqueue_script( 'wcftxtas-admin-product-js');
+            wp_localize_script( 'wcftxtas-admin-product-js', 'wcftxtasOptions', array(
+            ) );
+        } );
     }
 
     protected function register_assets() {
-        wp_register_script('wcftxtas-address-fields-js', "{$this->baseUrl}/assets/js/address-fields.js", ['jquery', 'underscore'], $this->version, false);
+        wp_register_script( 'wcftxtas-address-fields-js', "{$this->baseUrl}/assets/js/address-fields.js", ['jquery', 'underscore'], $this->version, false );
+        wp_register_script( 'wcftxtas-admin-product-js', "{$this->baseUrl}/assets/js/admin-product.js", ['jquery', 'underscore', 'backbone'], $this->version, false );
+        wp_register_style( 'wcftxtas-admin-css', "{$this->baseUrl}/assets/css/admin.css", [], $this->version );
+
     }
 
     protected function get_tab_panel_output() {
@@ -88,76 +106,30 @@ class Plugin {
 
                 <div class="form-field _wcftxtas_field_mapping_field">
                     <label><?php echo esc_html(__('Field Mapping')) ?></label>
+                    <div class="subfields" id="wcftxtas-address-fields-container">
                 <?php
                     $mapping_field_name = static::MAPPING_FIELD_NAME;
                     $field_data = $this->get_json_field($post->ID, $mapping_field_name);
-                    $addressFields = array(
-                        (object) array(
-                            'id'            => 'sender',
-                            'label'         => __( 'Sender', 'wcftxtas' ),
-                        ),
-                        (object) array(
-                            'id'            => 'receiver',
-                            'label'         => __( 'Receiver', 'wcftxtas' ),
-                        ),
-                    );
 
-                    foreach ($addressFields as $_idx => $_field) {
-                        $data = isset($field_data[$_idx]) ? $field_data[$_idx] : null;
-                        if (!is_null($data)) {
-                            $data->id = $_idx;
-                            $data->base_name_attr = "{$mapping_field_name}[$_idx]";
-                        }
-                        ?>
-
-                    <div class="subfield-wrapper">
-                        <?php echo $this->get_address_config_field_output($data) ?>
+                    ?>
+                        <addressConfigField></addressConfigField>
+                        <script>
+                            (function ($) {
+                              let data = <?php echo json_encode($field_data) ?>;
+                              $(function () {
+                                  $('#wcftxtas-address-fields-container').each(function () {
+                                      let view = new wcftxtas.admin.views.AddressConfigFieldView({
+                                          el: this,
+                                          field: data,
+                                          baseName: '<?php echo $mapping_field_name ?>',
+                                      });
+                                      view.render();
+                                  });
+                              });
+                            }(jQuery));
+                        </script>
                     </div>
-                        <?php
-                    }
-                ?>
                 </div>
-                <style>
-                    div.form-field {
-                        padding: 5px 20px 5px 162px;
-                        margin: 9px 0;
-                    }
-
-                    .form-field .sub-label {
-                        margin-left: 0px;
-                        clear: both;
-                    }
-
-                    .form-field .sub-field {
-                        clear: both;
-                    }
-
-                    .form-field .subfield-wrapper {
-                        width: auto;
-                        overflow: auto;
-                        vertical-align: middle;
-                        float: none;
-                        margin-bottom: 15px;
-                        padding-bottom: 15px;
-                        border-bottom: 1px solid lightgray;
-                    }
-
-                    .form-field .subfield-wrapper:last-child {
-                        margin-bottom: 0;
-                        padding-bottom: 0;
-                        border-bottom: 0;
-                    }
-
-                    .form-field .subfield {
-                        margin-bottom: 10px;
-                        overflow: auto;
-                    }
-
-                    .form-field .subfield-wrapper textarea {
-                        width: 50%;
-                        height: 100px;
-                    }
-                </style>
         </div>
         <?php
         $output = ob_get_clean();
