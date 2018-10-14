@@ -66,7 +66,7 @@ class Plugin {
     }
 
     protected function register_assets() {
-        wp_register_script('wcftxtas-address-fields-js', "{$this->baseUrl}/assets/js/address-fields.js", ['jquery'], $this->version, false);
+        wp_register_script('wcftxtas-address-fields-js', "{$this->baseUrl}/assets/js/address-fields.js", ['jquery', 'underscore'], $this->version, false);
     }
 
     protected function get_tab_panel_output() {
@@ -107,17 +107,24 @@ class Plugin {
                         $data = isset($field_data[$_idx]) ? $field_data[$_idx] : null;
                         $caption = isset($data) && isset($data->label) ? $data->label : null;
                         $mapping = isset($data) && isset($data->mapping) ? json_encode($data->mapping, JSON_PRETTY_PRINT) : null;
+                        $placeholder = isset($data) && isset($data->placeholder) ? $data->placeholder : null;
 
                         $field_id_label = "_wcftxtas_field_mapping_field_{$_field->id}_label";
                         $field_id_mapping = "_wcftxtas_field_mapping_field_{$_field->id}_mapping";
+                        $field_id_placeholder = "_wcftxtas_field_mapping_field_{$_field->id}_placeholder";
                         $field_caption_label = $_field->label . ' - Label';
                         $field_caption_mapping = $_field->label . ' - Mapping';
+                        $field_caption_placeholder = $_field->label . ' - Placeholder';
                         ?>
                         <label class="sub-label" for="<?php echo $field_id_label ?>"><?php echo esc_html($field_caption_label) ?></label>
                         <input class="sub-field" type="text" id="<?php echo esc_attr($field_id_label) ?>" title="<?php echo esc_html($field_caption_label) ?>" name="<?php echo $mapping_field_name ?>[<?php echo $_idx ?>][label]" value="<?php echo $caption ?>" />
                         <label class="sub-label" for="<?php echo $field_id_mapping ?>"><?php echo esc_html($field_caption_mapping) ?></label>
-                        <textarea class="sub-field" id="<?php echo esc_attr($field_id_mapping) ?>_mapping" name="<?php echo $mapping_field_name ?>[<?php echo $_idx ?>][mapping]" title="<?php echo esc_html($field_caption_mapping) ?> - Mapping"><?php
+                        <textarea class="sub-field" id="<?php echo esc_attr($field_id_mapping) ?>_mapping" name="<?php echo $mapping_field_name ?>[<?php echo $_idx ?>][mapping]" title="<?php echo esc_attr($field_caption_mapping) ?>"><?php
                             echo esc_html($mapping);
+                        ?></textarea>
+                        <label class="sub-label" for="<?php echo esc_attr($field_id_placeholder) ?>"><?php echo esc_html($field_caption_placeholder) ?></label>
+                        <textarea class="sub-field" id="<?php echo esc_attr($field_id_placeholder) ?>" name="<?php echo $mapping_field_name ?>[<?php echo $_idx ?>][placeholder]" title="<?php echo esc_attr($field_caption_mapping) ?>"><?php
+                            echo esc_html($placeholder);
                         ?></textarea>
                         <?php
                     }
@@ -173,18 +180,31 @@ class Plugin {
         if ( isset( $_POST[static::MAPPING_FIELD_NAME] ) ) {
             // For some reason, the data comes in slashed, which causes problems with JSON.
             $mapping = wp_unslash($_POST[static::MAPPING_FIELD_NAME]);
-            // Prepare JSON to be saved.
-            if (is_array($mapping)) {
-                foreach ($mapping as $_idx => &$_data) {
-                    $_data['mapping'] = json_decode($_data['mapping']);
-                }
-            }
-
-            if (!is_scalar($mapping)) {
-                $mapping = json_encode($mapping);
-            }
+            $mapping = $this->serialize_map_field($mapping);
             update_post_meta( $post_id, static::MAPPING_FIELD_NAME, $mapping );
         }
+    }
+
+    protected function serialize_map_field($value) {
+        // Prepare JSON to be saved.
+        if (is_array($value)) {
+            foreach ($value as $_idx => &$_data) {
+                // Text representing JSON - because the whole object gets encoded later
+                $_data['mapping'] = json_decode($_data['mapping']);
+
+                // Escaping linebreaks for JSON
+                if (isset($_data['placeholder'])) {
+                    $_data['placeholder'] = preg_replace('![\n\r]+!', '\n', $_data['placeholder']);
+                }
+            }
+        }
+
+        // Finally encode the object
+        if (!is_scalar($value)) {
+            $value = json_encode($value);
+        }
+
+        return $value;
     }
 
     protected function get_json_field( $post_id, $field_name ) {

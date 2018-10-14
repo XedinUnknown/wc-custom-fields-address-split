@@ -1,2 +1,6 @@
 /build/
 /vendor/
+/.idea/inspectionProfiles/
+/.idea/codeStyles/
+/.idea/workspace.xml
+/.idea/misc.xml
