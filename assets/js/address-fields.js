@@ -104,9 +104,13 @@
             let placeholder = data.placeholder;
 
             $container = $(this.container);
-            $senderField = $(`<textarea class="wcftxtas-address-field wcftxtas-address-field--${id}" id="wcftxtas-address-field-${id}"></textarea>`).css({
-                margin: 0,
-            });
+            $senderField = $(`<textarea class="wcftxtas-address-field wcftxtas-address-field--${id}" id="wcftxtas-address-field-${id}"></textarea>`)
+                .css({
+                    margin: 0,
+                })
+                .attr({
+                    placeholder: placeholder,
+                });
             $wrapper = $('<p><label></label></p>');
             $senderField.wrap($wrapper);
             $senderField.before(label);
