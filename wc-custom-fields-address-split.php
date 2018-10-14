@@ -116,7 +116,7 @@ class Plugin {
                         <label class="sub-label" for="<?php echo $field_id_label ?>"><?php echo esc_html($field_caption_label) ?></label>
                         <input class="sub-field" type="text" id="<?php echo esc_attr($field_id_label) ?>" title="<?php echo esc_html($field_caption_label) ?>" name="<?php echo $mapping_field_name ?>[<?php echo $_idx ?>][label]" value="<?php echo $caption ?>" />
                         <label class="sub-label" for="<?php echo $field_id_mapping ?>"><?php echo esc_html($field_caption_mapping) ?></label>
-                        <textarea class="sub-field" id="<?php echo esc_attr($field_id_mapping) ?>_mapping" name="<?php echo $mapping_field_name ?>[<?php echo $_idx ?>][mapping]" title="<?php echo esc_html($field_caption_mapping) ?> - Mapping"><?php
+                        <textarea class="sub-field" id="<?php echo esc_attr($field_id_mapping) ?>_mapping" name="<?php echo $mapping_field_name ?>[<?php echo $_idx ?>][mapping]" title="<?php echo esc_attr($field_caption_mapping) ?>"><?php
                             echo esc_html($mapping);
                         ?></textarea>
                         <?php
