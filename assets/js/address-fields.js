@@ -115,12 +115,12 @@
             $senderBlock.append($notification);
 
             let me = this;
-            $senderField.on('blur', (function($notification){
+            $senderField.on('keyup', _.debounce((function($notification){
                 return function (e) {
                     me.fieldSplitterUi.splitField(e.target, fieldMap);
                     me.animateNotice($notification, 'Please check if the fields were filled in correctly');
                 };
-            }($notification)));
+            }($notification)), 1000));
 
             $container.prepend($senderBlock);
 
