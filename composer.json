@@ -1,0 +1,14 @@
+{
+    "name": "xedinunknown/wc-custom-fields-address-split",
+    "description": "An extension to the \"WooCommerce Custom Fields TXT\" add-on that adds parsing of an address textarea into fields.",
+    "type": "wordpress-plugin",
+    "license": "GPLv3",
+    "authors": [
+        {
+            "name": "Anton Ukhanev",
+            "email": "xedin.unknown@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {}
+}
