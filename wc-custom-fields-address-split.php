@@ -137,6 +137,31 @@ class Plugin {
         return $output;
     }
 
+    protected function get_address_config_field_template() {
+        ob_start();
+
+        ?>
+<div class="subfield-wrapper">
+    <div class="subfield">
+        <label class="sub-label" for="<% caption_id %>"><% caption_label %></label>
+        <input class="sub-field" type="text" id="<% caption_id %>" title="<% caption_label %>" name="<% base_name %>[label]" value="<% caption %>" />
+    </div>
+
+    <div class="subfield">
+        <label class="sub-label" for="<% mapping_id %>"><% mapping_label %></label>
+        <textarea class="sub-field" id="<% mapping_id %>" name="<% base_name %>[mapping]" title="<% mapping_label %>"><% mapping %></textarea>
+    </div>
+
+    <div class="subfield">
+        <label class="sub-label" for="<% placeholder_id %>"><% placeholder_label %></label>
+        <textarea class="sub-field" id="<% placeholder_id %>" name="<% base_name %>[placeholder]" title="<% placeholder_label %>"><% placeholder %></textarea>
+    </div>
+</div>
+        <?php
+
+        return ob_get_clean();
+    }
+
     protected function get_address_config_field_output($data) {
         if (empty($data)) {
             return '';

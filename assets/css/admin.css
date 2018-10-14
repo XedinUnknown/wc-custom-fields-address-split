@@ -20,6 +20,7 @@ div.form-field {
     margin-bottom: 15px;
     padding-bottom: 15px;
     border-bottom: 1px solid lightgray;
+    position: relative;
 }
 
 .form-field .subfield-wrapper:last-child {
@@ -36,4 +37,13 @@ div.form-field {
 .form-field .subfield-wrapper textarea {
     width: 50%;
     height: 100px;
+}
+
+.form-field .wcftxtas-admin-address-remove {
+    position: absolute;
+    left: 51%;
+    top: 18px;
+    border: 1px solid red;
+    padding: 3px;
+    cursor: pointer;
 }
