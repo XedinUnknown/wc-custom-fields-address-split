@@ -1,4 +1,4 @@
-(function ($, options) {
+(function ($, _, options) {
     var AddressSplitter = function () {
 
         let sepChars = '\\n,';
@@ -177,4 +177,4 @@
             fieldUi.createField(i, fieldMap[i].label, fieldMap[i].mapping);
         }
     });
-}(jQuery, wcftxtasOptions));
+}(jQuery, _, wcftxtasOptions));

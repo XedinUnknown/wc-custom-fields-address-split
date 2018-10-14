@@ -66,7 +66,7 @@ class Plugin {
     }
 
     protected function register_assets() {
-        wp_register_script('wcftxtas-address-fields-js', "{$this->baseUrl}/assets/js/address-fields.js", ['jquery'], $this->version, false);
+        wp_register_script('wcftxtas-address-fields-js', "{$this->baseUrl}/assets/js/address-fields.js", ['jquery', 'underscore'], $this->version, false);
     }
 
     protected function get_tab_panel_output() {
