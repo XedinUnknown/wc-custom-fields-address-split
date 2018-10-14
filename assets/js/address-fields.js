@@ -98,7 +98,11 @@
         this.fieldSplitterUi = fieldSplitterUi;
         this.container = container;
 
-        this.createField = function (id, label, fieldMap) {
+        this.createField = function (id, data) {
+            let label = data.label;
+            let fieldMap = data.mapping;
+            let placeholder = data.placeholder;
+
             $container = $(this.container);
             $senderField = $(`<textarea class="wcftxtas-address-field wcftxtas-address-field--${id}" id="wcftxtas-address-field-${id}"></textarea>`).css({
                 margin: 0,
@@ -115,12 +119,12 @@
             $senderBlock.append($notification);
 
             let me = this;
-            $senderField.on('keyup', _.debounce((function($notification){
+            $senderField.on('keyup', _.debounce((function($notification, fieldMap){
                 return function (e) {
                     me.fieldSplitterUi.splitField(e.target, fieldMap);
                     me.animateNotice($notification, 'Please check if the fields were filled in correctly');
                 };
-            }($notification)), 1000));
+            }($notification, fieldMap)), 1000));
 
             $container.prepend($senderBlock);
 
@@ -174,7 +178,7 @@
                 continue;
             }
 
-            fieldUi.createField(i, fieldMap[i].label, fieldMap[i].mapping);
+            fieldUi.createField(i, fieldMap[i]);
         }
     });
 }(jQuery, _, wcftxtasOptions));
