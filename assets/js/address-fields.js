@@ -100,20 +100,56 @@
 
         this.createField = function (id, label, fieldMap) {
             $container = $(this.container);
-            $senderField = $(`<textarea class="wcftxtas-address-field wcftxtas-address-field--${id}" id="wcftxtas-address-field-${id}"></textarea>`);
+            $senderField = $(`<textarea class="wcftxtas-address-field wcftxtas-address-field--${id}" id="wcftxtas-address-field-${id}"></textarea>`).css({
+                margin: 0,
+            });
             $wrapper = $('<p><label></label></p>');
             $senderField.wrap($wrapper);
             $senderField.before(label);
+            $notification = $('<span class="address-notice">&nbsp;</span>').css({
+                opacity: 0,
+                color: 'red',
+                'font-size': '0.8em',
+            });
             $senderBlock = $senderField.closest('p');
+            $senderBlock.append($notification);
 
             let me = this;
-            $senderField.on('blur', function (e) {
-                me.fieldSplitterUi.splitField(e.target, fieldMap);
-            });
+            $senderField.on('blur', (function($notification){
+                return function (e) {
+                    me.fieldSplitterUi.splitField(e.target, fieldMap);
+                    me.animateNotice($notification, 'Please check if the fields were filled in correctly');
+                };
+            }($notification)));
 
             $container.prepend($senderBlock);
 
             return $senderField;
+        };
+
+        this.animateNotice = function (notice, text) {
+            $notice = $(notice);
+            if (parseInt($notice.css('opacity')) !== 0) {
+                return;
+            }
+
+            // Set the label
+            $notice.html(text);
+
+            // Fade in and out
+            $notice.animate({
+                opacity: 1,
+            },{
+                duration: 100,
+                queue: true,
+            })
+            .delay(3000)
+            .animate({
+                opacity: 0
+            },{
+                duration: 100,
+                queue: true,
+            });
         };
     };
 
