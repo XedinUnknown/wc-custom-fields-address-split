@@ -105,28 +105,11 @@ class Plugin {
 
                     foreach ($addressFields as $_idx => $_field) {
                         $data = isset($field_data[$_idx]) ? $field_data[$_idx] : null;
-                        $caption = isset($data) && isset($data->label) ? $data->label : null;
-                        $mapping = isset($data) && isset($data->mapping) ? json_encode($data->mapping, JSON_PRETTY_PRINT) : null;
-                        $placeholder = isset($data) && isset($data->placeholder) ? $data->placeholder : null;
-
-                        $field_id_label = "_wcftxtas_field_mapping_field_{$_field->id}_label";
-                        $field_id_mapping = "_wcftxtas_field_mapping_field_{$_field->id}_mapping";
-                        $field_id_placeholder = "_wcftxtas_field_mapping_field_{$_field->id}_placeholder";
-                        $field_caption_label = $_field->label . ' - Label';
-                        $field_caption_mapping = $_field->label . ' - Mapping';
-                        $field_caption_placeholder = $_field->label . ' - Placeholder';
-                        ?>
-                        <label class="sub-label" for="<?php echo $field_id_label ?>"><?php echo esc_html($field_caption_label) ?></label>
-                        <input class="sub-field" type="text" id="<?php echo esc_attr($field_id_label) ?>" title="<?php echo esc_html($field_caption_label) ?>" name="<?php echo $mapping_field_name ?>[<?php echo $_idx ?>][label]" value="<?php echo $caption ?>" />
-                        <label class="sub-label" for="<?php echo $field_id_mapping ?>"><?php echo esc_html($field_caption_mapping) ?></label>
-                        <textarea class="sub-field" id="<?php echo esc_attr($field_id_mapping) ?>_mapping" name="<?php echo $mapping_field_name ?>[<?php echo $_idx ?>][mapping]" title="<?php echo esc_attr($field_caption_mapping) ?>"><?php
-                            echo esc_html($mapping);
-                        ?></textarea>
-                        <label class="sub-label" for="<?php echo esc_attr($field_id_placeholder) ?>"><?php echo esc_html($field_caption_placeholder) ?></label>
-                        <textarea class="sub-field" id="<?php echo esc_attr($field_id_placeholder) ?>" name="<?php echo $mapping_field_name ?>[<?php echo $_idx ?>][placeholder]" title="<?php echo esc_attr($field_caption_mapping) ?>"><?php
-                            echo esc_html($placeholder);
-                        ?></textarea>
-                        <?php
+                        if (!is_null($data)) {
+                            $data->id = $_idx;
+                            $data->base_name_attr = "{$mapping_field_name}[$_idx]";
+                        }
+                        echo $this->get_address_config_field_output($data);
                     }
                 ?>
                     </div>
@@ -163,6 +146,39 @@ class Plugin {
         $output = ob_get_clean();
 
         return $output;
+    }
+
+    protected function get_address_config_field_output($data) {
+        if (empty($data)) {
+            return '';
+        }
+        $caption = isset($data->label) ? $data->label : null;
+        $mapping = isset($data->mapping) ? json_encode($data->mapping, JSON_PRETTY_PRINT) : null;
+        $placeholder = isset($data->placeholder) ? $data->placeholder : null;
+        $id = isset($data->id) ? $data->id : null;
+
+        $field_id_label = "_wcftxtas_field_mapping_field_{$id}_label";
+        $field_id_mapping = "_wcftxtas_field_mapping_field_{$id}_mapping";
+        $field_id_placeholder = "_wcftxtas_field_mapping_field_{$id}_placeholder";
+        $field_caption_label = $data->label . ' - Label';
+        $field_caption_mapping = $data->label . ' - Mapping';
+        $field_caption_placeholder = $data->label . ' - Placeholder';
+
+        ob_start();
+        ?>
+        <label class="sub-label" for="<?php echo $field_id_label ?>"><?php echo esc_html($field_caption_label) ?></label>
+        <input class="sub-field" type="text" id="<?php echo esc_attr($field_id_label) ?>" title="<?php echo esc_html($field_caption_label) ?>" name="<?php echo $data->base_name_attr ?>[label]" value="<?php echo $caption ?>" />
+        <label class="sub-label" for="<?php echo $field_id_mapping ?>"><?php echo esc_html($field_caption_mapping) ?></label>
+        <textarea class="sub-field" id="<?php echo esc_attr($field_id_mapping) ?>_mapping" name="<?php echo $data->base_name_attr ?>[mapping]" title="<?php echo esc_attr($field_caption_mapping) ?>"><?php
+            echo esc_html($mapping);
+            ?></textarea>
+        <label class="sub-label" for="<?php echo esc_attr($field_id_placeholder) ?>"><?php echo esc_html($field_caption_placeholder) ?></label>
+        <textarea class="sub-field" id="<?php echo esc_attr($field_id_placeholder) ?>" name="<?php echo $data->base_name_attr ?>[placeholder]" title="<?php echo esc_attr($field_caption_mapping) ?>"><?php
+            echo esc_html($placeholder);
+            ?></textarea>
+        <?php
+
+        return ob_get_clean();
     }
 
     protected function get_tab() {
