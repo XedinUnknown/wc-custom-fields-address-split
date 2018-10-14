@@ -173,18 +173,31 @@ class Plugin {
         if ( isset( $_POST[static::MAPPING_FIELD_NAME] ) ) {
             // For some reason, the data comes in slashed, which causes problems with JSON.
             $mapping = wp_unslash($_POST[static::MAPPING_FIELD_NAME]);
-            // Prepare JSON to be saved.
-            if (is_array($mapping)) {
-                foreach ($mapping as $_idx => &$_data) {
-                    $_data['mapping'] = json_decode($_data['mapping']);
-                }
-            }
-
-            if (!is_scalar($mapping)) {
-                $mapping = json_encode($mapping);
-            }
+            $mapping = $this->serialize_map_field($mapping);
             update_post_meta( $post_id, static::MAPPING_FIELD_NAME, $mapping );
         }
+    }
+
+    protected function serialize_map_field($value) {
+        // Prepare JSON to be saved.
+        if (is_array($value)) {
+            foreach ($value as $_idx => &$_data) {
+                // Text representing JSON - because the whole object gets encoded later
+                $_data['mapping'] = json_decode($_data['mapping']);
+
+                // Escaping linebreaks for JSON
+                if (isset($_data['placeholder'])) {
+                    $_data['placeholder'] = preg_replace('![\n\r]+!', '\n', $_data['placeholder']);
+                }
+            }
+        }
+
+        // Finally encode the object
+        if (!is_scalar($value)) {
+            $value = json_encode($value);
+        }
+
+        return $value;
     }
 
     protected function get_json_field( $post_id, $field_name ) {
