@@ -1,0 +1,49 @@
+div.form-field {
+    padding: 5px 20px 5px 162px;
+    margin: 9px 0;
+}
+
+.form-field .sub-label {
+    margin-left: 0px;
+    clear: both;
+}
+
+.form-field .sub-field {
+    clear: both;
+}
+
+.form-field .subfield-wrapper {
+    width: auto;
+    overflow: auto;
+    vertical-align: middle;
+    float: none;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid lightgray;
+    position: relative;
+}
+
+.form-field .subfield-wrapper:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: 0;
+}
+
+.form-field .subfield {
+    margin-bottom: 10px;
+    overflow: auto;
+}
+
+.form-field .subfield-wrapper textarea {
+    width: 50%;
+    height: 100px;
+}
+
+.form-field .wcftxtas-admin-address-remove {
+    position: absolute;
+    left: 51%;
+    top: 18px;
+    border: 1px solid red;
+    padding: 3px;
+    cursor: pointer;
+}

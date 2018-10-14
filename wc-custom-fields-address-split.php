@@ -40,6 +40,9 @@ class Plugin {
         add_action( 'init', function () {
             $this->register_assets();
         } );
+        add_action( 'admin_init', function () {
+            $this->register_assets();
+        } );
         add_action( 'wp_enqueue_scripts', function () {
             if (!function_exists('is_product') || !is_product()) {
                 return false;
@@ -63,10 +66,25 @@ class Plugin {
                 'fieldMap'            => $this->get_field_map( $product_id ),
             ) );
         } );
+
+        add_action( 'admin_enqueue_scripts', function () {
+            $post = get_post();
+            if (!$post || is_wp_error($post) || $post->post_type !== 'product') {
+                return false;
+            }
+
+            wp_enqueue_style( 'wcftxtas-admin-css' );
+            wp_enqueue_script( 'wcftxtas-admin-product-js');
+            wp_localize_script( 'wcftxtas-admin-product-js', 'wcftxtasOptions', array(
+            ) );
+        } );
     }
 
     protected function register_assets() {
-        wp_register_script('wcftxtas-address-fields-js', "{$this->baseUrl}/assets/js/address-fields.js", ['jquery'], $this->version, false);
+        wp_register_script( 'wcftxtas-address-fields-js', "{$this->baseUrl}/assets/js/address-fields.js", ['jquery', 'underscore'], $this->version, false );
+        wp_register_script( 'wcftxtas-admin-product-js', "{$this->baseUrl}/assets/js/admin-product.js", ['jquery', 'underscore', 'backbone'], $this->version, false );
+        wp_register_style( 'wcftxtas-admin-css', "{$this->baseUrl}/assets/css/admin.css", [], $this->version );
+
     }
 
     protected function get_tab_panel_output() {
@@ -88,74 +106,101 @@ class Plugin {
 
                 <div class="form-field _wcftxtas_field_mapping_field">
                     <label><?php echo esc_html(__('Field Mapping')) ?></label>
-                    <div class="subfield-wrapper">
+                    <div class="subfields" id="wcftxtas-address-fields-container">
                 <?php
                     $mapping_field_name = static::MAPPING_FIELD_NAME;
                     $field_data = $this->get_json_field($post->ID, $mapping_field_name);
-                    $addressFields = array(
-                        (object) array(
-                            'id'            => 'sender',
-                            'label'         => __( 'Sender', 'wcftxtas' ),
-                        ),
-                        (object) array(
-                            'id'            => 'receiver',
-                            'label'         => __( 'Receiver', 'wcftxtas' ),
-                        ),
-                    );
 
-                    foreach ($addressFields as $_idx => $_field) {
-                        $data = isset($field_data[$_idx]) ? $field_data[$_idx] : null;
-                        $caption = isset($data) && isset($data->label) ? $data->label : null;
-                        $mapping = isset($data) && isset($data->mapping) ? json_encode($data->mapping, JSON_PRETTY_PRINT) : null;
-
-                        $field_id_label = "_wcftxtas_field_mapping_field_{$_field->id}_label";
-                        $field_id_mapping = "_wcftxtas_field_mapping_field_{$_field->id}_mapping";
-                        $field_caption_label = $_field->label . ' - Label';
-                        $field_caption_mapping = $_field->label . ' - Mapping';
-                        ?>
-                        <label class="sub-label" for="<?php echo $field_id_label ?>"><?php echo esc_html($field_caption_label) ?></label>
-                        <input class="sub-field" type="text" id="<?php echo esc_attr($field_id_label) ?>" title="<?php echo esc_html($field_caption_label) ?>" name="<?php echo $mapping_field_name ?>[<?php echo $_idx ?>][label]" value="<?php echo $caption ?>" />
-                        <label class="sub-label" for="<?php echo $field_id_mapping ?>"><?php echo esc_html($field_caption_mapping) ?></label>
-                        <textarea class="sub-field" id="<?php echo esc_attr($field_id_mapping) ?>_mapping" name="<?php echo $mapping_field_name ?>[<?php echo $_idx ?>][mapping]" title="<?php echo esc_html($field_caption_mapping) ?> - Mapping"><?php
-                            echo esc_html($mapping);
-                        ?></textarea>
-                        <?php
-                    }
-                ?>
+                    ?>
+                        <addressConfigField></addressConfigField>
+                        <script>
+                            (function ($) {
+                              let data = <?php echo json_encode($field_data) ?>;
+                              $(function () {
+                                  $('#wcftxtas-address-fields-container').each(function () {
+                                      let view = new wcftxtas.admin.views.AddressConfigFieldView({
+                                          el: this,
+                                          field: data,
+                                          baseName: '<?php echo $mapping_field_name ?>',
+                                      });
+                                      view.render();
+                                  });
+                              });
+                            }(jQuery));
+                        </script>
                     </div>
                 </div>
-                <style>
-                    div.form-field {
-                        padding: 5px 20px 5px 162px;
-                        margin: 9px 0;
-                    }
-
-                    .form-field .sub-label {
-                        margin-left: 0px;
-                        clear: both;
-                    }
-
-                    .form-field .sub-field {
-                        clear: both;
-                    }
-
-                    .form-field .subfield-wrapper {
-                        width: auto;
-                        overflow: auto;
-                        vertical-align: middle;
-                        float: none;
-                    }
-
-                    .form-field .subfield-wrapper textarea {
-                        width: 50%;
-                        height: 100px;
-                    }
-                </style>
         </div>
         <?php
         $output = ob_get_clean();
 
         return $output;
+    }
+
+    protected function get_address_config_field_template() {
+        ob_start();
+
+        ?>
+<div class="subfield-wrapper">
+    <div class="subfield">
+        <label class="sub-label" for="<% caption_id %>"><% caption_label %></label>
+        <input class="sub-field" type="text" id="<% caption_id %>" title="<% caption_label %>" name="<% base_name %>[label]" value="<% caption %>" />
+    </div>
+
+    <div class="subfield">
+        <label class="sub-label" for="<% mapping_id %>"><% mapping_label %></label>
+        <textarea class="sub-field" id="<% mapping_id %>" name="<% base_name %>[mapping]" title="<% mapping_label %>"><% mapping %></textarea>
+    </div>
+
+    <div class="subfield">
+        <label class="sub-label" for="<% placeholder_id %>"><% placeholder_label %></label>
+        <textarea class="sub-field" id="<% placeholder_id %>" name="<% base_name %>[placeholder]" title="<% placeholder_label %>"><% placeholder %></textarea>
+    </div>
+</div>
+        <?php
+
+        return ob_get_clean();
+    }
+
+    protected function get_address_config_field_output($data) {
+        if (empty($data)) {
+            return '';
+        }
+        $caption = isset($data->label) ? $data->label : null;
+        $mapping = isset($data->mapping) ? json_encode($data->mapping, JSON_PRETTY_PRINT) : null;
+        $placeholder = isset($data->placeholder) ? $data->placeholder : null;
+        $id = isset($data->id) ? $data->id : null;
+
+        $field_id_label = "_wcftxtas_field_mapping_field_{$id}_label";
+        $field_id_mapping = "_wcftxtas_field_mapping_field_{$id}_mapping";
+        $field_id_placeholder = "_wcftxtas_field_mapping_field_{$id}_placeholder";
+        $field_caption_label = 'Label';
+        $field_caption_mapping = 'Mapping';
+        $field_caption_placeholder = 'Placeholder';
+
+        ob_start();
+        ?>
+        <div class="subfield">
+            <label class="sub-label" for="<?php echo $field_id_label ?>"><?php echo esc_html($field_caption_label) ?></label>
+        <input class="sub-field" type="text" id="<?php echo esc_attr($field_id_label) ?>" title="<?php echo esc_html($field_caption_label) ?>" name="<?php echo $data->base_name_attr ?>[label]" value="<?php echo $caption ?>" />
+        </div>
+
+        <div class="subfield">
+            <label class="sub-label" for="<?php echo $field_id_mapping ?>"><?php echo esc_html($field_caption_mapping) ?></label>
+            <textarea class="sub-field" id="<?php echo esc_attr($field_id_mapping) ?>_mapping" name="<?php echo $data->base_name_attr ?>[mapping]" title="<?php echo esc_attr($field_caption_mapping) ?>"><?php
+                echo esc_html($mapping);
+            ?></textarea>
+        </div>
+
+        <div class="subfield">
+            <label class="sub-label" for="<?php echo esc_attr($field_id_placeholder) ?>"><?php echo esc_html($field_caption_placeholder) ?></label>
+            <textarea class="sub-field" id="<?php echo esc_attr($field_id_placeholder) ?>" name="<?php echo $data->base_name_attr ?>[placeholder]" title="<?php echo esc_attr($field_caption_mapping) ?>"><?php
+                echo esc_html($placeholder);
+            ?></textarea>
+        </div>
+        <?php
+
+        return ob_get_clean();
     }
 
     protected function get_tab() {
@@ -173,18 +218,31 @@ class Plugin {
         if ( isset( $_POST[static::MAPPING_FIELD_NAME] ) ) {
             // For some reason, the data comes in slashed, which causes problems with JSON.
             $mapping = wp_unslash($_POST[static::MAPPING_FIELD_NAME]);
-            // Prepare JSON to be saved.
-            if (is_array($mapping)) {
-                foreach ($mapping as $_idx => &$_data) {
-                    $_data['mapping'] = json_decode($_data['mapping']);
-                }
-            }
-
-            if (!is_scalar($mapping)) {
-                $mapping = json_encode($mapping);
-            }
+            $mapping = $this->serialize_map_field($mapping);
             update_post_meta( $post_id, static::MAPPING_FIELD_NAME, $mapping );
         }
+    }
+
+    protected function serialize_map_field($value) {
+        // Prepare JSON to be saved.
+        if (is_array($value)) {
+            foreach ($value as $_idx => &$_data) {
+                // Text representing JSON - because the whole object gets encoded later
+                $_data['mapping'] = json_decode($_data['mapping']);
+
+                // Escaping linebreaks for JSON
+                if (isset($_data['placeholder'])) {
+                    $_data['placeholder'] = preg_replace('![\n\r]+!', '\n', $_data['placeholder']);
+                }
+            }
+        }
+
+        // Finally encode the object
+        if (!is_scalar($value)) {
+            $value = json_encode($value);
+        }
+
+        return $value;
     }
 
     protected function get_json_field( $post_id, $field_name ) {

@@ -1,4 +1,4 @@
-(function ($, options) {
+(function ($, _, options) {
     var AddressSplitter = function () {
 
         let sepChars = '\\n,';
@@ -98,22 +98,66 @@
         this.fieldSplitterUi = fieldSplitterUi;
         this.container = container;
 
-        this.createField = function (id, label, fieldMap) {
+        this.createField = function (id, data) {
+            let label = data.label;
+            let fieldMap = data.mapping;
+            let placeholder = data.placeholder;
+
             $container = $(this.container);
-            $senderField = $(`<textarea class="wcftxtas-address-field wcftxtas-address-field--${id}" id="wcftxtas-address-field-${id}"></textarea>`);
+            $senderField = $(`<textarea class="wcftxtas-address-field wcftxtas-address-field--${id}" id="wcftxtas-address-field-${id}"></textarea>`)
+                .css({
+                    margin: 0,
+                })
+                .attr({
+                    placeholder: placeholder,
+                });
             $wrapper = $('<p><label></label></p>');
             $senderField.wrap($wrapper);
             $senderField.before(label);
+            $notification = $('<span class="address-notice">&nbsp;</span>').css({
+                opacity: 0,
+                color: 'red',
+                'font-size': '0.8em',
+            });
             $senderBlock = $senderField.closest('p');
+            $senderBlock.append($notification);
 
             let me = this;
-            $senderField.on('blur', function (e) {
-                me.fieldSplitterUi.splitField(e.target, fieldMap);
-            });
+            $senderField.on('keyup', _.debounce((function($notification, fieldMap){
+                return function (e) {
+                    me.fieldSplitterUi.splitField(e.target, fieldMap);
+                    me.animateNotice($notification, 'Please check if the fields were filled in correctly');
+                };
+            }($notification, fieldMap)), 1000));
 
             $container.prepend($senderBlock);
 
             return $senderField;
+        };
+
+        this.animateNotice = function (notice, text) {
+            $notice = $(notice);
+            if (parseInt($notice.css('opacity')) !== 0) {
+                return;
+            }
+
+            // Set the label
+            $notice.html(text);
+
+            // Fade in and out
+            $notice.animate({
+                opacity: 1,
+            },{
+                duration: 100,
+                queue: true,
+            })
+            .delay(3000)
+            .animate({
+                opacity: 0
+            },{
+                duration: 100,
+                queue: true,
+            });
         };
     };
 
@@ -138,7 +182,7 @@
                 continue;
             }
 
-            fieldUi.createField(i, fieldMap[i].label, fieldMap[i].mapping);
+            fieldUi.createField(i, fieldMap[i]);
         }
     });
-}(jQuery, wcftxtasOptions));
+}(jQuery, _, wcftxtasOptions));
